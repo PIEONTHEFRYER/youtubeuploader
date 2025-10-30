@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>YouTube Uploader</title>
+<style>
+  body { font-family: Arial; background: #f0f0f0; text-align: center; padding: 50px; }
+  input, button { margin: 10px; padding: 10px; font-size: 16px; }
+</style>
+</head>
+<body>
+<h1>YouTube Video Uploader</h1>
+<input type="file" id="videoFile">
+<br>
+<button onclick="handleAuthClick()">Login & Upload</button>
+
+<script src="https://apis.google.com/js/api.js"></script>
+<script>
+const CLIENT_ID = 'YOUR_CLIENT_ID_HERE';
+const SCOPES = 'https://www.googleapis.com/auth/youtube.upload';
+
+function handleClientLoad() {
+    gapi.load('client:auth2', initClient);
+}
+
+function initClient() {
+    gapi.client.init({
+        clientId: CLIENT_ID,
+        scope: SCOPES,
+        discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest']
+    });
+}
+
+function handleAuthClick() {
+    gapi.auth2.getAuthInstance().signIn().then(() => {
+        uploadVideo();
+    });
+}
+
+function uploadVideo() {
+    const file = document.getElementById('videoFile').files[0];
+    if (!file) return alert("Select a video first!");
+
+    const metadata = {
+        snippet: { title: file.name, description: '' },
+        status: { privacyStatus: 'private' }
+    };
+
+    const uploader = new MediaUploader({
+        baseUrl: 'https://www.googleapis.com/upload/youtube/v3/videos',
+        file: file,
+        token: gapi.auth2.getAuthInstance().currentUser.get().getAuthResponse().access_token,
+        metadata: metadata,
+        onComplete: (data) => alert('Upload complete!'),
+        onError: (err) => alert('Error: ' + err)
+    });
+    uploader.upload();
+}
+</script>
+<script src="https://unpkg.com/youtube-media-uploader"></script>
+<script>handleClientLoad();</script>
+</body>
+</html>
